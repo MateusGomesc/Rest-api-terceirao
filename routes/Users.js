@@ -6,6 +6,13 @@ const bcrypt = require('bcrypt')
 router.post('/', async (req, res) => {
     const { name, email, password } = req.body
 
+    // Verify user was registered
+    const user = await Users.findOne({ where: { email: email } })
+
+    if(user){
+        res.json({ error: "Email já cadastradado"})
+    }
+
     bcrypt.hash(password, 10).then((hash) => {
         Users.create({
             name: name,
