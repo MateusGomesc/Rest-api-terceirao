@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const { Users } = require('../models')
 const bcrypt = require('bcrypt')
+const { sign } = require('jsonwebtoken')
+require('dotenv').config()
 
 router.post('/', async (req, res) => {
     const { name, email, password } = req.body
@@ -38,7 +40,8 @@ router.post('/login', async (req, res) => {
             res.json({ error: 'Usuário e senha não conferem'})
         }
 
-        res.json("Logado")
+        const acessToken = sign({email: user.email, id: user.id}, process.env.SECRET)
+        res.json(acessToken)
     })
 })
 
