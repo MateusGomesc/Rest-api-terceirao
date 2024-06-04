@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
             password: hash
         })
 
-        res.json('Success')
+        res.json('Usuário criado com sucesso')
     })
 })
 
@@ -40,7 +40,7 @@ router.post('/login', async (req, res) => {
             res.json({ error: 'Usuário e senha não conferem'})
         }
 
-        const acessToken = sign({email: user.email, id: user.id}, process.env.SECRET)
+        const acessToken = sign({email: user.email, id: user.id, isAdmin: user.isAdmin}, process.env.SECRET)
         res.json(acessToken)
     })
 })
