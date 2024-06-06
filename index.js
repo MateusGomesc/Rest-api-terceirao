@@ -6,8 +6,12 @@ const cors = require('cors')
 app.use(cors())
 app.use(express.json())
 
+// Routers
 const UsersRouters = require('./routes/Users')
 app.use('/auth', UsersRouters)
+
+const EventsRouters = require('./routes/Events')
+app.use('/events', EventsRouters)
 
 db.sequelize.sync().then(() => {
     app.listen(3001, () => {
