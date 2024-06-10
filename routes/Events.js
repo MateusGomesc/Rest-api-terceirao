@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
+const { Events } = require('../models')
+const { Products } = require('../models')
 
 // multer configure
 
@@ -26,8 +28,38 @@ const storage = multer.diskStorage({
 const upload = multer({ storage })
 
 router.post('/register', upload.single('image'), async (req, res) => {
-    console.log(req.body, req.file)
-    res.json({ msg: 'ok' })
+    const { name, date, location, status } = req.body
+    const products = JSON.parse(req.body.products)
+
+    Events.create({
+        name: name,
+        date: date,
+        location: location,
+        image: req.file.path,
+        status: status === 'Fechado' ? 0 : 1
+    }).then((data) => {
+        products.map((item) => {
+            Products.create({
+                name: item.name,
+                price: item.price,
+                EventId: data.dataValues.id
+            })
+        })
+
+        res.json('Evento criado com sucesso')
+    })
+})
+
+router.get('/', async (req, res) => {
+    const events = await Events.findAll()
+
+    res.json(events)
+})
+
+router.get('/:id', async (req, res) => {
+    const eventId = req.params.id
+    const event = await Events.findOne({ where: { id: eventId } })
+    res.json(event)
 })
 
 module.exports = router
