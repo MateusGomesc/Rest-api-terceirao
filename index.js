@@ -13,9 +13,6 @@ app.use('/auth', UsersRouters)
 const EventsRouters = require('./routes/Events')
 app.use('/events', EventsRouters)
 
-const ProductsRouters = require('./routes/Products')
-app.use('/products', ProductsRouters)
-
 db.sequelize.sync().then(() => {
     app.listen(3001, () => {
         console.log('Server is running in port 3001')
