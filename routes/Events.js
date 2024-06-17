@@ -101,5 +101,43 @@ router.get('/:id', async (req, res) => {
     res.json({ event, products })
 })
 
+router.patch('/status/:id', async (req, res) => {
+    const id = req.params.id
+    const update = req.body
+
+    try{
+        const event = Events.findOne({ where: { id: id } })
+        event.status = update.status
+        const data = Events.update(event, { where: { id: id } })
+
+        if(!data){
+            res.status(404).json({ error: 'Evento não foi encontrado para atualização' })
+        }
+
+        res.json('Status atualizado com sucesso')
+    }
+    catch{
+        res.status(500).json({ error: 'Não foi possível atualizar o status do evento' })
+    }
+})
+
+router.delete('/delete/:id', async (req, res) => {
+    const id = req.params.id
+
+    try{
+        const eventDelete = await Events.destroy({ where: { id: id } })
+
+        if(!eventDelete){
+            res.json({ error: 'Evento não encontrado' })
+        }
+        else{
+            res.json('Evento deletado com sucesso')
+        }
+    }
+    catch{
+        res.json({ error: 'Não foi possível deletar o evento' })
+    }
+})
+
 
 module.exports = router

@@ -29,20 +29,25 @@ router.post('/', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body
 
-    const user = await Users.findOne({ where: { email: email } })
-
-    if(!user){
-        res.json({ error: 'Usuário não existe'})
-    }
-
-    bcrypt.compare(password, user.password).then((match) => {
-        if(!match){
-            res.json({ error: 'Usuário e senha não conferem'})
+    try{
+        const user = await Users.findOne({ where: { email: email } })
+    
+        if(!user){
+            res.json({ error: 'Usuário não existe'})
         }
-
-        const acessToken = sign({email: user.email, id: user.id, isAdmin: user.isAdmin}, process.env.SECRET)
-        res.json(acessToken)
-    })
+    
+        bcrypt.compare(password, user.password).then((match) => {
+            if(!match){
+                res.json({ error: 'Usuário e senha não conferem'})
+            }
+    
+            const acessToken = sign({email: user.email, id: user.id, isAdmin: user.isAdmin}, process.env.SECRET)
+            res.json(acessToken)
+        })
+    }
+    catch{
+        res.json({ error: 'Não foi possível realizar o login' })
+    }
 })
 
 module.exports = router
