@@ -1,14 +1,14 @@
 module.exports = (sequelize, DataTypes) => {
     const Orders = sequelize.define("Orders", {
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
         price: {
             type: DataTypes.FLOAT,
             allowNull: false
         },
         proof: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        payMethod: {
             type: DataTypes.STRING,
             allowNull: false
         }
