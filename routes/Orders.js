@@ -5,6 +5,8 @@ const fs = require('fs')
 const path = require('path')
 const { Orders } = require('../models')
 const { OrdersItems } = require('../models')
+const { Users } = require('../models')
+const { error } = require('console')
 
 // multer configure
 
@@ -28,10 +30,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
-router.post('/', upload.single('proof'), async (req, res) => {
-    console.log(req)
-    const { user, event, price, payMethod } = req.body
+router.post('/pix', upload.single('proof'), async (req, res) => {
+    const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
+    console.log(products, req.body.products)
     
     Orders.create({
         price: price,
@@ -39,6 +41,7 @@ router.post('/', upload.single('proof'), async (req, res) => {
         eventId: event,
         userId: user,
         proof: req.file.path,
+        terms: terms
     }).then((data) => {
         Object.keys(products).forEach((prop) => {
             if(products[prop]){
@@ -50,7 +53,32 @@ router.post('/', upload.single('proof'), async (req, res) => {
             }
         })
 
-        res.json('Pedido concluído com sucesso')
+        res.json(data)
+    })
+})
+
+router.post('/cash', async (req, res) => {
+    const { user, event, price, payMethod, terms } = req.body
+    const products = JSON.parse(req.body.products)
+
+    Orders.create({
+        price: price,
+        payMethod: payMethod,
+        eventId: event,
+        userId: user,
+        terms: terms
+    }).then((data) => {
+        Object.keys(products).forEach((prop) => {
+            if(products[prop]){
+                OrdersItems.create({
+                    OrderId: data.id,
+                    ProductId: prop,
+                    quantity: products[prop]
+                })
+            }
+        })
+
+        res.json(data)
     })
 })
 
@@ -67,6 +95,37 @@ router.get('/:id', async (req, res) => {
         else{
             res.json({ order, items })
         }
+    }
+    catch{
+        res.status(500).json({ error: 'Não foi possível encontrar o pedido' })
+    }
+})
+
+router.get('/event/:id', async (req, res) => {
+    const id = req.params.id
+
+    try{
+        const orders = await Orders.findAll({ where: { eventId: id } })
+
+        if(!orders.length){
+            res.json({ error: 'Não foi possível encontrar o pedido' })
+        }
+
+        const ordersWithItems = await Promise.all(
+            orders.map(async (order) => {
+                const items = await OrdersItems.findAll({ where: { OrderId: order.id } })
+                const username = await Users.findOne({ where: { id: order.userId } })
+
+                order.items = items || []
+                return {
+                    ...order.toJSON(),
+                    username: username.name,
+                    items: items
+                }
+            })
+        )
+
+        res.json(ordersWithItems)
     }
     catch{
         res.status(500).json({ error: 'Não foi possível encontrar o pedido' })

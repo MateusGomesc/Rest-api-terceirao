@@ -6,9 +6,13 @@ module.exports = (sequelize, DataTypes) => {
         },
         proof: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         payMethod: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        terms: {
             type: DataTypes.STRING,
             allowNull: false
         }
