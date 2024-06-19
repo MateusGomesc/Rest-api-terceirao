@@ -132,4 +132,23 @@ router.get('/event/:id', async (req, res) => {
     }
 })
 
+router.get('/hasShop/:eventId/:userId', async (req, res) => {
+    const { eventId, userId } = req.params
+
+    try{
+        const orders = await Orders.findAll({ where: { eventId: eventId, userId: userId } })
+        console.log(orders)
+
+        if(orders.length > 0){
+            res.json({ status: 0, message: 'Você já comprou nesse evento' })
+        }
+        else{
+            res.json({ status: 1 })
+        }
+    }
+    catch{
+        res.json({ error: 'Não foi possível resgatar os dados' })
+    }
+})
+
 module.exports = router
