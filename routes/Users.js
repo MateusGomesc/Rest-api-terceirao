@@ -12,7 +12,7 @@ router.post('/', async (req, res) => {
     const user = await Users.findOne({ where: { email: email } })
 
     if(user){
-        res.json({ error: "Email já cadastradado"})
+        return res.json({ error: "Email já cadastradado"})
     }
 
     bcrypt.hash(password, 10).then((hash) => {

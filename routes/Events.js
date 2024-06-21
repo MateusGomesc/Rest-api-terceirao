@@ -111,7 +111,7 @@ router.patch('/status/:id', async (req, res) => {
         const data = Events.update(event, { where: { id: id } })
 
         if(!data){
-            res.status(404).json({ error: 'Evento não foi encontrado para atualização' })
+            return res.status(404).json({ error: 'Evento não foi encontrado para atualização' })
         }
 
         res.json('Status atualizado com sucesso')

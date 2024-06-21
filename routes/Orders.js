@@ -6,7 +6,7 @@ const path = require('path')
 const { Orders } = require('../models')
 const { OrdersItems } = require('../models')
 const { Users } = require('../models')
-const { error } = require('console')
+const { Events } = require('../models')
 
 // multer configure
 
@@ -108,7 +108,7 @@ router.get('/event/:id', async (req, res) => {
         const orders = await Orders.findAll({ where: { eventId: id } })
 
         if(!orders.length){
-            res.json({ error: 'Não foi possível encontrar o pedido' })
+            return res.json({ error: 'Não foi possível encontrar o pedido' })
         }
 
         const ordersWithItems = await Promise.all(
@@ -148,6 +148,35 @@ router.get('/hasShop/:eventId/:userId', async (req, res) => {
     }
     catch{
         res.json({ error: 'Não foi possível resgatar os dados' })
+    }
+})
+
+router.get('/user/:id', async (req, res) => {
+    const id = req.params.id
+
+    try{
+        const orders = await Orders.findAll({ where: { userId: id } })
+
+        if(!orders.length){
+            return res.json({ error: 'Nenhum evento foi encontrado' })
+        }
+
+        const completeOrders = await Promise.all(
+            orders.map(async (order) => {
+                const event = await Events.findOne({ where: { id: order.eventId } })
+
+                return {
+                    order,
+                    event
+                }
+            })
+        )
+
+        res.json(completeOrders)
+    }
+    catch(error){
+        console.log(error)
+        res.json({ error: 'Não foi possível resgatar suas compras' })
     }
 })
 
