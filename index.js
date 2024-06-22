@@ -3,6 +3,7 @@ const app = express()
 const db = require('./models')
 const cors = require('cors')
 const path = require('path')
+require('dotenv').config()
 
 app.use(cors())
 app.use(express.json())
@@ -22,7 +23,7 @@ const ProductsRouters = require('./routes/Products')
 app.use('/products', ProductsRouters)
 
 db.sequelize.sync().then(() => {
-    app.listen(3001, () => {
+    app.listen(process.env.PORT || 3001, () => {
         console.log('Server is running in port 3001')
     })
 })
