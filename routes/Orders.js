@@ -35,51 +35,61 @@ router.post('/pix', upload.single('proof'), async (req, res) => {
     const products = JSON.parse(req.body.products)
     console.log(products, req.body.products)
     
-    Orders.create({
-        price: price,
-        payMethod: payMethod,
-        eventId: event,
-        userId: user,
-        proof: req.file.path,
-        terms: terms
-    }).then((data) => {
-        Object.keys(products).forEach((prop) => {
-            if(products[prop]){
-                OrdersItems.create({
-                    OrderId: data.id,
-                    ProductId: prop,
-                    quantity: products[prop]
-                })
-            }
+    try{
+        Orders.create({
+            price: price,
+            payMethod: payMethod,
+            eventId: event,
+            userId: user,
+            proof: req.file.path,
+            terms: terms
+        }).then((data) => {
+            Object.keys(products).forEach((prop) => {
+                if(products[prop]){
+                    OrdersItems.create({
+                        OrderId: data.id,
+                        ProductId: prop,
+                        quantity: products[prop]
+                    })
+                }
+            })
+    
+            res.json(data)
         })
-
-        res.json(data)
-    })
+    }
+    catch{
+        res.json('Não foi possível realizar a compra')
+    }
 })
 
 router.post('/cash', async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
 
-    Orders.create({
-        price: price,
-        payMethod: payMethod,
-        eventId: event,
-        userId: user,
-        terms: terms
-    }).then((data) => {
-        Object.keys(products).forEach((prop) => {
-            if(products[prop]){
-                OrdersItems.create({
-                    OrderId: data.id,
-                    ProductId: prop,
-                    quantity: products[prop]
-                })
-            }
+    try{
+        Orders.create({
+            price: price,
+            payMethod: payMethod,
+            eventId: event,
+            userId: user,
+            terms: terms
+        }).then((data) => {
+            Object.keys(products).forEach((prop) => {
+                if(products[prop]){
+                    OrdersItems.create({
+                        OrderId: data.id,
+                        ProductId: prop,
+                        quantity: products[prop]
+                    })
+                }
+            })
+    
+            res.json(data)
         })
-
-        res.json(data)
-    })
+    }
+    catch{
+        res.json('Não foi possível realizar a compra')
+    }
 })
 
 router.get('/:id', async (req, res) => {

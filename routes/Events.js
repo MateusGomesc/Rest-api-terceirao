@@ -31,23 +31,28 @@ router.post('/register', upload.single('image'), async (req, res) => {
     const { name, date, location, status } = req.body
     const products = JSON.parse(req.body.products)
 
-    Events.create({
-        name: name,
-        date: date,
-        location: location,
-        image: req.file.path,
-        status: status === 'Fechado' ? 0 : 1
-    }).then((data) => {
-        products.map((item) => {
-            Products.create({
-                name: item.name,
-                price: item.price,
-                EventId: data.dataValues.id
+    try{
+        Events.create({
+            name: name,
+            date: date,
+            location: location,
+            image: req.file.path,
+            status: status === 'Fechado' ? 0 : 1
+        }).then((data) => {
+            products.map((item) => {
+                Products.create({
+                    name: item.name,
+                    price: item.price,
+                    EventId: data.dataValues.id
+                })
             })
+    
+            res.json('Evento criado com sucesso')
         })
-
-        res.json('Evento criado com sucesso')
-    })
+    }
+    catch{
+        res.json('não foi possível criar o evento')
+    }
 })
 
 router.patch('/modify/:id', upload.single('image'), async (req, res) => {
@@ -77,28 +82,43 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     
         res.json('Evento atualizado com sucesso')
     }
-    catch(error){
-        console.error(error)
+    catch{
         res.json('Erro ao atualizar o evento')
     }
 })
 
 router.get('/', async (req, res) => {
-    const events = await Events.findAll()
-    res.json(events)
+    try{
+        const events = await Events.findAll()
+        res.json(events)
+    }
+    catch{
+        res.json('não foi possível buscar os eventos')
+    }
 })
 
 router.get('/open', async (req, res) => {
-    const events = await Events.findAll({ where: { status: true } })
-    res.json(events)
+    try{
+        const events = await Events.findAll({ where: { status: true } })
+        res.json(events)
+    }
+    catch{
+        res.json('não foi possível buscar os eventos')
+    }
 })
 
 router.get('/:id', async (req, res) => {
     const eventId = req.params.id
-    const event = await Events.findOne({ where: { id: eventId } })
-    const products = await Products.findAll({ where: { EventId: eventId } })
-    
-    res.json({ event, products })
+
+    try{
+        const event = await Events.findOne({ where: { id: eventId } })
+        const products = await Products.findAll({ where: { EventId: eventId } })
+        
+        res.json({ event, products })
+    }
+    catch{
+        res.json('Não foi possível buscar o evento')
+    }
 })
 
 router.patch('/status/:id', async (req, res) => {

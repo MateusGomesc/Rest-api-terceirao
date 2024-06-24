@@ -8,22 +8,27 @@ require('dotenv').config()
 router.post('/', async (req, res) => {
     const { name, email, password } = req.body
 
-    // Verify user was registered
-    const user = await Users.findOne({ where: { email: email } })
-
-    if(user){
-        return res.json({ error: "Email já cadastradado"})
-    }
-
-    bcrypt.hash(password, 10).then((hash) => {
-        Users.create({
-            name: name,
-            email: email,
-            password: hash
+    try{
+        // Verify user was registered
+        const user = await Users.findOne({ where: { email: email } })
+    
+        if(user){
+            return res.json({ error: "Email já cadastradado"})
+        }
+    
+        bcrypt.hash(password, 10).then((hash) => {
+            Users.create({
+                name: name,
+                email: email,
+                password: hash
+            })
+    
+            res.json('Usuário criado com sucesso')
         })
-
-        res.json('Usuário criado com sucesso')
-    })
+    }
+    catch{
+        res.json('Não foi possível cadastrar o usuário')
+    }
 })
 
 router.post('/login', async (req, res) => {
