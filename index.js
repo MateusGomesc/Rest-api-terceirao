@@ -5,13 +5,12 @@ const cors = require('cors')
 const path = require('path')
 require('dotenv').config()
 
-const corsOptions = {
-    origin: 'https://rest-api-terceirao.vercel.app/',  // Permite apenas este domínio
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: ['Content-Type', 'Authorization']
-  };
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*')
+    app.use(cors())
+    next()
+})
 
-app.use(cors(corsOptions))
 app.use(express.json())
 app.use('/upload', express.static(path.join(__dirname, 'upload')))
 
