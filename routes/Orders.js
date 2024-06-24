@@ -97,7 +97,7 @@ router.get('/:id', async (req, res) => {
         }
     }
     catch{
-        res.status(500).json({ error: 'Não foi possível encontrar o pedido' })
+        res.json({ error: 'Não foi possível encontrar o pedido' })
     }
 })
 
@@ -128,7 +128,7 @@ router.get('/event/:id', async (req, res) => {
         res.json(ordersWithItems)
     }
     catch{
-        res.status(500).json({ error: 'Não foi possível encontrar o pedido' })
+        res.json({ error: 'Não foi possível encontrar o pedido' })
     }
 })
 

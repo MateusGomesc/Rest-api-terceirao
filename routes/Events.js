@@ -79,7 +79,7 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     }
     catch(error){
         console.error(error)
-        res.status(500).json('Erro ao atualizar o evento')
+        res.json('Erro ao atualizar o evento')
     }
 })
 
@@ -117,7 +117,7 @@ router.patch('/status/:id', async (req, res) => {
         res.json('Status atualizado com sucesso')
     }
     catch{
-        res.status(500).json({ error: 'Não foi possível atualizar o status do evento' })
+        res.json({ error: 'Não foi possível atualizar o status do evento' })
     }
 })
 
