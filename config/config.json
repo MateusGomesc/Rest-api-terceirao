@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "root",
-    "password": "Mateus31#",
-    "database": "terceirao",
-    "host": "localhost",
+    "username": "u546697596_gomes",
+    "password": "y:8H@8mea:[L",
+    "database": "u546697596_terceirao",
+    "host": "srv1526.hstgr.io",
     "dialect": "mysql"
   },
   "test": {
@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "railway",
-    "host": "127.0.0.1",
+    "username": "u546697596_gomes",
+    "password": "y:8H@8mea:[L",
+    "database": "u546697596_terceirao",
+    "host": "srv1526.hstgr.io",
     "dialect": "mysql"
   }
 }
