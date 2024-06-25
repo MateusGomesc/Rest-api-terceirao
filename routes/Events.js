@@ -69,16 +69,14 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     }
 
     try{
-        await Events.update(updateDataEvent, { where: { id: id } })
-        await products.map((item) => {
-            const updateDataProducts = {
+        const event = await Events.update(updateDataEvent, { where: { id: id } })
+        await Promise.all(products.map((item) => {
+            return Products.create({
                 name: item.name,
                 price: item.price,
-                EventId: id
-            }
-    
-            Products.update(updateDataProducts, { where: { id: item.id } })
-        })
+                EventId: event.dataValues.id
+            });
+        }));
     
         res.json('Evento atualizado com sucesso')
     }
