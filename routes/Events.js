@@ -80,7 +80,8 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     
         res.json('Evento atualizado com sucesso')
     }
-    catch{
+    catch(error){
+        console.log('Erro ao criar o evento: ' + error)
         res.json('Erro ao atualizar o evento')
     }
 })
