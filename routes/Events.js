@@ -2,12 +2,14 @@ const express = require('express')
 const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { Events } = require('../models')
 const { Products } = require('../models')
 
 // multer configure
 
-const storage = multer.diskStorage({
+/* const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = 'upload/banners'
 
@@ -23,7 +25,24 @@ const storage = multer.diskStorage({
         const filename = req.body.name + "." + file.originalname.split('.')[1] || file.originalname
         cb(null, filename) 
     }
-})
+}) */
+
+// cloudinary configuration
+
+cloudinary.config({ 
+    cloud_name: 'dtqohmifx', 
+    api_key: '536416356178299', 
+    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY'
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'uploads/banner', // Pasta onde os arquivos serão armazenados no Cloudinary
+      format: async (req, file) =>  file.originalname.split('.')[1], // Formato dos arquivos
+      public_id: (req, file) => req.body.name || file.originalname,
+    },
+  });
 
 const upload = multer({ storage })
 
