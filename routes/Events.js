@@ -3,7 +3,6 @@ const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
 const cloudinary = require('cloudinary').v2
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { Events } = require('../models')
 const { Products } = require('../models')
 
@@ -35,15 +34,14 @@ cloudinary.config({
     api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY'
 });
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: 'uploads/banner', // Pasta onde os arquivos serão armazenados no Cloudinary
-      format: async (req, file) =>  file.originalname.split('.')[1], // Formato dos arquivos
-      public_id: (req, file) => req.body.name || file.originalname,
-    },
-  });
+async function handleUpload(file) {
+    const res = await cloudinary.uploader.upload(file, {
+      resource_type: "auto",
+    });
+    return res;
+}
 
+const storage = new multer.memoryStorage()
 const upload = multer({ storage })
 
 router.post('/register', upload.single('image'), async (req, res) => {
@@ -51,11 +49,16 @@ router.post('/register', upload.single('image'), async (req, res) => {
     const products = JSON.parse(req.body.products)
 
     try{
+        // image upload
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+        const cldRes = await handleUpload(dataURI);
+
         Events.create({
             name: name,
             date: date,
             location: location,
-            image: req.file.path,
+            image: cldRes.url,
             status: status === 'Fechado' ? 0 : 1
         }).then((data) => {
             products.map((item) => {
