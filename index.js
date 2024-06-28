@@ -14,7 +14,6 @@ app.use((req, res, next) => {
 })
 
 app.use(express.json())
-app.use('/upload', express.static(path.join(__dirname, 'upload')))
 
 // Routers
 const UsersRouters = require('./routes/Users')

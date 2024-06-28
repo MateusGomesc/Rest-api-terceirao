@@ -31,7 +31,8 @@ const { Products } = require('../models')
 cloudinary.config({ 
     cloud_name: 'dtqohmifx', 
     api_key: '536416356178299', 
-    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY'
+    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY',
+    secure: true,
 });
 
 async function handleUpload(file) {
