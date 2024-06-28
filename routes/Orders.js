@@ -10,7 +10,7 @@ const { Events } = require('../models')
 
 // multer configure
 
-const storage = multer.diskStorage({
+/* const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = path.join('upload/proofs', req.body.event)
 
@@ -26,22 +26,43 @@ const storage = multer.diskStorage({
         const filename = req.body.user + "." + file.originalname.split('.')[1] || file.originalname
         cb(null, filename) 
     }
-})
+}) */
 
+// cloudinary configuration
+
+cloudinary.config({ 
+    cloud_name: 'dtqohmifx', 
+    api_key: '536416356178299', 
+    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY',
+    secure: true,
+});
+
+async function handleUpload(file) {
+    const res = await cloudinary.uploader.upload(file, {
+      resource_type: "auto",
+    });
+    return res;
+}
+
+const storage = new multer.memoryStorage()
 const upload = multer({ storage })
 
 router.post('/pix', upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
-    console.log(products, req.body.products)
     
     try{
+        // image upload
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+        const cldRes = await handleUpload(dataURI);
+
         Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
             userId: user,
-            proof: req.file.path,
+            proof: cldRes.url,
             terms: terms
         }).then((data) => {
             Object.keys(products).forEach((prop) => {
