@@ -47,7 +47,7 @@ async function handleUpload(file) {
 const storage = new multer.memoryStorage()
 const upload = multer({ storage })
 
-router.post('/pix', upload.single('proof'), async (req, res) => {
+router.post('/pix', cors({ origin: 'https://terceiraoinformatica.vercel.app' }, upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
     
