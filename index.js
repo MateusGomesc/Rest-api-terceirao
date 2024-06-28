@@ -9,7 +9,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
     res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, DELETE, PUT, PATCH, DELETE')
     res.header('Access-Control-Allow-Headers', 'Content-Type, x-requested-with')
-    app.use(cors())
+    app.use(cors({ origin: 'https://terceiraoinformatica.vercel.app' }))
     next()
 })
 
