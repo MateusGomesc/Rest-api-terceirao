@@ -102,7 +102,7 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
             return Products.create({
                 name: item.name,
                 price: item.price,
-                EventId: event.id
+                EventId: event.dataValues.id
             });
         }));
     
