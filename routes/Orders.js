@@ -3,6 +3,7 @@ const router = express.Router()
 const multer = require('multer')
 const fs = require('fs')
 const path = require('path')
+const cloudinary = require('cloudinary').v2
 const { Orders } = require('../models')
 const { OrdersItems } = require('../models')
 const { Users } = require('../models')
@@ -47,7 +48,7 @@ async function handleUpload(file) {
 const storage = new multer.memoryStorage()
 const upload = multer({ storage })
 
-router.post('/pix', cors({ origin: 'https://terceiraoinformatica.vercel.app' }, upload.single('proof'), async (req, res) => {
+router.post('/pix', upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
     
@@ -57,7 +58,7 @@ router.post('/pix', cors({ origin: 'https://terceiraoinformatica.vercel.app' }, 
         let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
         const cldRes = await handleUpload(dataURI);
 
-        Orders.create({
+        await Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
@@ -65,9 +66,9 @@ router.post('/pix', cors({ origin: 'https://terceiraoinformatica.vercel.app' }, 
             proof: cldRes.url,
             terms: terms
         }).then((data) => {
-            Object.keys(products).forEach((prop) => {
+            Object.keys(products).forEach(async (prop) => {
                 if(products[prop]){
-                    OrdersItems.create({
+                    await OrdersItems.create({
                         OrderId: data.id,
                         ProductId: prop,
                         quantity: products[prop]
