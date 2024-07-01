@@ -84,26 +84,28 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     const id = req.params.id
 
     try{
-        // image upload
-        const b64 = Buffer.from(req.file?.buffer).toString("base64");
-        let dataURI = "data:" + req.file?.mimetype + ";base64," + b64;
-        const cldRes = await handleUpload(dataURI);
-
         const updateDataEvent = {
             name: name,
             date: date,
             location: location,
-            image: cldRes.url,
             status: status === 'Fechado' ? 0 : 1
         }
 
-        const event = await Events.update(updateDataEvent, { where: { id: id } })
+        // image upload
+        if(req.file){
+            const b64 = Buffer.from(req.file?.buffer).toString("base64");
+            let dataURI = "data:" + req.file?.mimetype + ";base64," + b64;
+            const cldRes = await handleUpload(dataURI);
+            updateDataEvent.image = cldRes.url
+        }
+
+        await Events.update(updateDataEvent, { where: { id: id } })
         await Promise.all(products.map((item) => {
-            return Products.create({
+            return Products.update({
                 name: item.name,
                 price: item.price,
-                EventId: event.dataValues.id
-            });
+                EventId: id
+            }, { where: { EventId: id } });
         }));
     
         res.json('Evento atualizado com sucesso')
