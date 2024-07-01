@@ -99,19 +99,35 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
             updateDataEvent.image = cldRes.url
         }
 
+        // update event
         await Events.update(updateDataEvent, { where: { id: id } })
-        await Promise.all(products.map((item) => {
-            return Products.update({
-                name: item.name,
-                price: item.price,
-                EventId: id
-            }, { where: { EventId: id } });
+
+        // verify with products exists
+        const existingProducts = await Products.findAll({ where: { EventId: id } })
+        const existingProductIds = existingProducts.map(product => product.id)
+
+        // update products
+        await Promise.all(products.map(async (item) => {
+            if(item.id && existingProductIds.includes(item.id)){
+                await Products.update({
+                    name: item.name,
+                    price: item.price,
+                    EventId: id
+                }, { where: { EventId: id } });
+            }
+            else{
+                await Products.create({
+                    name: item.name,
+                    price: item.price,
+                    EventId: id
+                });
+            }
         }));
     
         res.json('Evento atualizado com sucesso')
     }
     catch(error){
-        console.log('Erro ao criar o evento: ' + error)
+        console.error('Erro ao criar o evento: ' + error)
         res.json('Erro ao atualizar o evento')
     }
 })
