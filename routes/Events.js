@@ -113,7 +113,7 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
                     name: item.name,
                     price: item.price,
                     EventId: id
-                }, { where: { EventId: id } });
+                }, { where: { id: item.id } });
             }
             else{
                 await Products.create({
