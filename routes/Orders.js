@@ -212,4 +212,25 @@ router.get('/user/:id', async (req, res) => {
     }
 })
 
+router.put('/check/:id', async (req, res) => {
+    const id = req.params.id
+
+    try{
+        const order = await Orders.findOne({ where: { id: id } })
+
+        if(!order){
+            return res.json({ error: 'Não possível encontrar o pedido' })
+        }
+
+        let currentValue = order['received']
+        let updatedValue = !currentValue
+
+        await Orders.update({ ['received']: updatedValue })
+        res.json('Status atualizado')
+    }
+    catch{
+        res.json({ error: 'Não foi possível atualizar o status da compra' })
+    }
+})
+
 module.exports = router

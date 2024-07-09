@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         terms: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        received: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
         }
     })
 
