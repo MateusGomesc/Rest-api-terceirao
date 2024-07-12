@@ -213,7 +213,7 @@ router.get('/user/:id', async (req, res) => {
 })
 
 router.put('/check/:id', async (req, res) => {
-    const id = req.params.id
+    const id = req.params.id 
 
     try{
         const order = await Orders.findOne({ where: { id: id } })
