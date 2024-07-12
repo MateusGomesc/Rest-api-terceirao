@@ -225,7 +225,7 @@ router.put('/check/:id', async (req, res) => {
         let currentValue = order['received']
         let updatedValue = !currentValue
 
-        await Orders.update({ ['received']: updatedValue })
+        await Orders.update({ ['received']: updatedValue }, { where: { id: id } })
         res.json('Status atualizado')
     }
     catch{
