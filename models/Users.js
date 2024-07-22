@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid')
+
 module.exports = (sequelize, DataTypes) => {
     const Users = sequelize.define("Users", {
         email: {
@@ -16,6 +18,15 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
             allowNull: false
+        },
+        validation: {
+            type: DataTypes.UUID,
+            defaultValue: uuidv4,
+            allowNull: true
+        },
+        checked: {
+            type: DataTypes.DATEONLY,
+            allowNull: true
         }
     })
 
