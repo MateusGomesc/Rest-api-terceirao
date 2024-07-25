@@ -9,28 +9,8 @@ const { OrdersItems } = require('../models')
 const { Users } = require('../models')
 const { Events } = require('../models')
 
-// multer configure
-
-/* const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = path.join('upload/proofs', req.body.event)
-
-        // verify files exists
-        if(!fs.existsSync(uploadPath)){
-            fs.mkdirSync(uploadPath, { recursive: true })
-        }
-
-        cb(null, uploadPath)
-    },
-    filename: (req, file, cb) => {
-        // Save filename with extension or orginal name
-        const filename = req.body.user + "." + file.originalname.split('.')[1] || file.originalname
-        cb(null, filename) 
-    }
-}) */
-
 // cloudinary configuration
-
+/*
 cloudinary.config({ 
     cloud_name: 'dtqohmifx', 
     api_key: '536416356178299', 
@@ -43,7 +23,7 @@ async function handleUpload(file) {
       resource_type: "auto",
     });
     return res;
-}
+}*/
 
 const storage = new multer.memoryStorage()
 const upload = multer({ storage })
@@ -51,24 +31,20 @@ const upload = multer({ storage })
 router.post('/pix', upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
-    
-    try{
-        // image upload
-        const b64 = Buffer.from(req.file.buffer).toString("base64");
-        let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-        const cldRes = await handleUpload(dataURI);
 
-        await Orders.create({
+    try{
+        Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
             userId: user,
-            proof: cldRes.url,
-            terms: terms
+            proof: '',
+            terms: terms,
+            received: 0
         }).then((data) => {
-            Object.keys(products).forEach(async (prop) => {
+            Object.keys(products).forEach((prop) => {
                 if(products[prop]){
-                    await OrdersItems.create({
+                    OrdersItems.create({
                         OrderId: data.id,
                         ProductId: prop,
                         quantity: products[prop]
@@ -94,7 +70,8 @@ router.post('/cash', async (req, res) => {
             payMethod: payMethod,
             eventId: event,
             userId: user,
-            terms: terms
+            terms: terms,
+            received: 0
         }).then((data) => {
             Object.keys(products).forEach((prop) => {
                 if(products[prop]){
