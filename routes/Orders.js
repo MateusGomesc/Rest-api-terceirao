@@ -32,8 +32,8 @@ router.post('/pix', upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
 
-    try{
-        Orders.create({
+    try{ 
+        await Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
@@ -42,9 +42,9 @@ router.post('/pix', upload.single('proof'), async (req, res) => {
             terms: terms,
             received: 0
         }).then((data) => {
-            Object.keys(products).forEach((prop) => {
+            Object.keys(products).forEach(async (prop) => {
                 if(products[prop]){
-                    OrdersItems.create({
+                    await OrdersItems.create({
                         OrderId: data.id,
                         ProductId: prop,
                         quantity: products[prop]
@@ -65,7 +65,7 @@ router.post('/cash', async (req, res) => {
     const products = JSON.parse(req.body.products)
 
     try{
-        Orders.create({
+        await Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
@@ -73,9 +73,9 @@ router.post('/cash', async (req, res) => {
             terms: terms,
             received: 0
         }).then((data) => {
-            Object.keys(products).forEach((prop) => {
+            Object.keys(products).forEach(async (prop) => {
                 if(products[prop]){
-                    OrdersItems.create({
+                    await OrdersItems.create({
                         OrderId: data.id,
                         ProductId: prop,
                         quantity: products[prop]
