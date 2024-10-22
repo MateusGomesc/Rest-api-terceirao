@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "u546697596_gomes",
-    "password": "y:8H@8mea:[L",
-    "database": "u546697596_terceirao",
-    "host": "srv1526.hstgr.io",
+    "username": "root",
+    "password": "Mateus31#",
+    "database": "terceirao_dev",
+    "host": "localhost",
     "dialect": "mysql"
   },
   "test": {

@@ -4,11 +4,12 @@ const { Products } = require('../models')
 
 router.post('/', async (req, res) => {
     const { ids } = req.body
-    console.log(ids)
 
     try{
+        // walking in ids
         const products = await Promise.all(
             ids.map(async (id) => {
+                // finding id in database and returning the name
                 const product = await Products.findOne({ where: { id: id } })
                 return product.name
             })

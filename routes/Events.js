@@ -1,89 +1,75 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const fs = require('fs')
-const cloudinary = require('cloudinary').v2
 const { Events } = require('../models')
 const { Products } = require('../models')
+const axios = require('axios')
+require('dotenv').config()
 
-// multer configure
+// Configure multer
+const storage = multer.memoryStorage()
+const upload = multer({ storage: storage })
 
-/* const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = 'upload/banners'
-
-        // verify files exists
-        if(!fs.existsSync(uploadPath)){
-            fs.mkdirSync(uploadPath, { recursive: true })
-        }
-
-        cb(null, 'upload/banners')
-    },
-    filename: (req, file, cb) => {
-        // Save filename with extension or orginal name
-        const filename = req.body.name + "." + file.originalname.split('.')[1] || file.originalname
-        cb(null, filename) 
-    }
-}) */
-
-// cloudinary configuration
-
-cloudinary.config({ 
-    cloud_name: 'dtqohmifx', 
-    api_key: '536416356178299', 
-    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY',
-    secure: true,
-});
-
-async function handleUpload(file) {
-    const res = await cloudinary.uploader.upload(file, {
-      resource_type: "auto",
-    });
-    return res;
-}
-
-const storage = new multer.memoryStorage()
-const upload = multer({ storage })
-
-router.post('/register', upload.single('image'), async (req, res) => {
+router.post('/register', upload.single('image') , async (req, res) => {
     const { name, date, location, status } = req.body
     const products = JSON.parse(req.body.products)
+    const file = req.file
+    let imageUrl = ''
+    let deleteHash = ''
+
+    if(file){
+        // Convert image to base64
+        const buffer = file.buffer
+        const base64 = buffer.toString('base64')
+
+        await axios.post('https://api.imgur.com/3/image', {
+            image: base64,
+            type: 'base64'
+        }, {
+            headers: {
+                Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`
+            }
+        }).then(response =>{ 
+            imageUrl = response.data.data.link
+            deleteHash = response.data.data.deletehash
+        })
+    }
 
     try{
-        // image upload
-        const b64 = Buffer.from(req.file.buffer).toString("base64");
-        let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-        const cldRes = await handleUpload(dataURI);
-
-        Events.create({
+        // create event
+        await Events.create({
             name: name,
             date: date,
             location: location,
-            image: cldRes.url,
+            image: imageUrl,
+            deleteHash: deleteHash,
             status: status === 'Fechado' ? 0 : 1
-        }).then((data) => {
-            products.map((item) => {
-                Products.create({
-                    name: item.name,
-                    price: item.price,
-                    EventId: data.dataValues.id
+        }).then(async (data) => {
+            // create products
+            await Promise.all(
+                products.map(async (item) => {
+                    await Products.create({
+                        name: item.name,
+                        price: item.price,
+                        EventId: data.dataValues.id
+                    })
                 })
-            })
-    
+            )
             res.json('Evento criado com sucesso')
         })
     }
-    catch{
-        res.json('não foi possível criar o evento')
+    catch(error){
+        res.json('não foi possível criar o evento ' + error)
     }
 })
 
-router.patch('/modify/:id', upload.single('image'), async (req, res) => {
+router.patch('/modify/:id', async (req, res) => {
     const { name, date, location, status } = req.body
     const products = JSON.parse(req.body.products)
     const id = req.params.id
 
     try{
+        // update object
         const updateDataEvent = {
             name: name,
             date: date,
@@ -91,23 +77,16 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
             status: status === 'Fechado' ? 0 : 1
         }
 
-        // image upload
-        if(req.file){
-            const b64 = Buffer.from(req.file?.buffer).toString("base64");
-            let dataURI = "data:" + req.file?.mimetype + ";base64," + b64;
-            const cldRes = await handleUpload(dataURI);
-            updateDataEvent.image = cldRes.url
-        }
-
         // update event
         await Events.update(updateDataEvent, { where: { id: id } })
 
-        // verify with products exists
+        // verify if products exists
         const existingProducts = await Products.findAll({ where: { EventId: id } })
         const existingProductIds = existingProducts.map(product => product.id)
 
         // update products
         await Promise.all(products.map(async (item) => {
+            // Verify if product exists in database
             if(item.id && existingProductIds.includes(item.id)){
                 await Products.update({
                     name: item.name,
@@ -126,8 +105,7 @@ router.patch('/modify/:id', upload.single('image'), async (req, res) => {
     
         res.json('Evento atualizado com sucesso')
     }
-    catch(error){
-        console.error('Erro ao criar o evento: ' + error)
+    catch{
         res.json('Erro ao atualizar o evento')
     }
 })
@@ -176,7 +154,7 @@ router.patch('/status/:id', async (req, res) => {
         const data = Events.update(event, { where: { id: id } })
 
         if(!data){
-            return res.status(404).json({ error: 'Evento não foi encontrado para atualização' })
+            return res.json({ error: 'Evento não foi encontrado para atualização' })
         }
 
         res.json('Status atualizado com sucesso')
@@ -190,10 +168,20 @@ router.delete('/delete/:id', async (req, res) => {
     const id = req.params.id
 
     try{
+        // fetching event in database
+        const event = await Events.findOne({ where: { id: id } })
+
+        // deleting image from imgur
+        await axios.post(`https://api.imgur.com/3/image/${event.deleteHash}`, {
+            headers: {
+                Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`
+            }
+        })
+
         const eventDelete = await Events.destroy({ where: { id: id } })
 
         if(!eventDelete){
-            res.json({ error: 'Evento não encontrado' })
+            res.json({ error: 'Evento não foi deletado' })
         }
         else{
             res.json('Evento deletado com sucesso')

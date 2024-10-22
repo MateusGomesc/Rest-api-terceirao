@@ -1,47 +1,51 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const fs = require('fs')
-const path = require('path')
-const cloudinary = require('cloudinary').v2
+const axios = require('axios')
 const { Orders } = require('../models')
 const { OrdersItems } = require('../models')
 const { Users } = require('../models')
 const { Events } = require('../models')
 
-// cloudinary configuration
-/*
-cloudinary.config({ 
-    cloud_name: 'dtqohmifx', 
-    api_key: '536416356178299', 
-    api_secret: 'ZUFpZAjrcDQFRD2gOmaBmIOOAPY',
-    secure: true,
-});
-
-async function handleUpload(file) {
-    const res = await cloudinary.uploader.upload(file, {
-      resource_type: "auto",
-    });
-    return res;
-}*/
-
-const storage = new multer.memoryStorage()
-const upload = multer({ storage })
+// configure multer
+const storage = multer.memoryStorage()
+const upload = multer({ storage: storage })
 
 router.post('/pix', upload.single('proof'), async (req, res) => {
     const { user, event, price, payMethod, terms } = req.body
     const products = JSON.parse(req.body.products)
+    const file = req.file
+    let imageUrl = ''
 
-    try{ 
+    if(file){
+        // Convert image to base64
+        const buffer = file.buffer
+        const base64 = buffer.toString('base64')
+
+        await axios.post('https://api.imgur.com/3/image', {
+            image: base64,
+            type: 'base64'
+        }, {
+            headers: {
+                Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`
+            }
+        }).then(response =>{ 
+            imageUrl = response.data.data.link
+        })
+    }
+
+    try{
+        // Create order 
         await Orders.create({
             price: price,
             payMethod: payMethod,
             eventId: event,
             userId: user,
-            proof: '',
+            proof: imageUrl,
             terms: terms,
             received: 0
         }).then((data) => {
+            // Walking in product object
             Object.keys(products).forEach(async (prop) => {
                 if(products[prop]){
                     await OrdersItems.create({
@@ -65,6 +69,7 @@ router.post('/cash', async (req, res) => {
     const products = JSON.parse(req.body.products)
 
     try{
+        // Create order
         await Orders.create({
             price: price,
             payMethod: payMethod,
@@ -73,6 +78,7 @@ router.post('/cash', async (req, res) => {
             terms: terms,
             received: 0
         }).then((data) => {
+            // Walking in product objects
             Object.keys(products).forEach(async (prop) => {
                 if(products[prop]){
                     await OrdersItems.create({
@@ -121,10 +127,15 @@ router.get('/event/:id', async (req, res) => {
         }
 
         const ordersWithItems = await Promise.all(
+            // Walking in order array
             orders.map(async (order) => {
+                // Search items of order
                 const items = await OrdersItems.findAll({ where: { OrderId: order.id } })
+
+                // Search user of order
                 const username = await Users.findOne({ where: { id: order.userId } })
 
+                // Return order with items and user
                 order.items = items || []
                 return {
                     ...order.toJSON(),
@@ -146,7 +157,6 @@ router.get('/hasShop/:eventId/:userId', async (req, res) => {
 
     try{
         const orders = await Orders.findAll({ where: { eventId: eventId, userId: userId } })
-        console.log(orders)
 
         if(orders.length > 0){
             res.json({ status: 0, message: 'Você já comprou nesse evento' })
@@ -183,8 +193,7 @@ router.get('/user/:id', async (req, res) => {
 
         res.json(completeOrders)
     }
-    catch(error){
-        console.log(error)
+    catch{
         res.json({ error: 'Não foi possível resgatar suas compras' })
     }
 })
@@ -199,7 +208,10 @@ router.put('/check/:id', async (req, res) => {
             return res.json({ error: 'Não possível encontrar o pedido' })
         }
 
+        // Receive current value
         let currentValue = order['received']
+
+        // Invert value of status
         let updatedValue = !currentValue
 
         await Orders.update({ ['received']: updatedValue }, { where: { id: id } })

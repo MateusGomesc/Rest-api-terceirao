@@ -20,6 +20,10 @@ module.exports = (sequelize, DataTypes) => {
         image: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        deleteHash: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     })
 

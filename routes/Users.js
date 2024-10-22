@@ -17,7 +17,8 @@ router.post('/', async (req, res) => {
         if(user){
             return res.json({ error: "Email já cadastradado"})
         }
-    
+        
+        // hash password and send to databse
         bcrypt.hash(password, 10).then(async (hash) => {
             const NewUser = await Users.create({
                 name: name,
@@ -61,13 +62,14 @@ router.get('/email/:token', async (req, res) => {
     const token = req.params.token
 
     try{
-        console.log(token)
+        // Verify if users was validated
         const user = await Users.findOne({ where: { validation: token } })
 
         if(!user){
             return res.sendFile(path.join(__dirname, '../public/confirmation-user.html'))
         }
 
+        // update validation in database
         await Users.update({
             checked: new Date(),
             validation: ''
@@ -84,8 +86,10 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body
 
     try{
+        // search user in database
         const user = await Users.findOne({ where: { email: email } })
-    
+        
+        // error tests
         if(!user){
             return res.json({ error: 'Usuário não existe'})
         }
@@ -93,12 +97,15 @@ router.post('/login', async (req, res) => {
         if(!user.checked){
             return res.json({ error: 'Confirme seu email' })
         }
-    
+        
+        // Compare passwords
         bcrypt.compare(password, user.password).then((match) => {
+            // Verify if password is correct
             if(!match){
                 return res.json({ error: 'Usuário e senha não conferem'})
             }
-    
+            
+            // Generate the acess token
             const acessToken = sign({email: user.email, id: user.id, isAdmin: user.isAdmin}, process.env.SECRET)
             res.json(acessToken)
         })
@@ -112,21 +119,27 @@ router.post('/setAdmin', async (req, res) => {
     const { email, password, acessToken } = req.body
 
     try{
+        // Decod acess token
         const decodedToken = verify(acessToken, process.env.SECRET)
+
+        // Verify if existent user really exists
         const userReq = await Users.findOne({ where: { id: decodedToken.id } })
 
+        // Verify if passwords match
         const passwordMatch = await bcrypt.compare(password, userReq.password)
 
         if(!passwordMatch) {
             return res.json({ error: 'Senha incorreta' });
         }
         else{
+            // search user in database
             const user = await Users.findOne({ where: { email: email }  })
 
             if(user.isAdmin){
                 return res.json({ error: 'Usuário já é administrador'})
             }
 
+            // trasform user in admin
             user.isAdmin = true;
             await user.save();
             res.json('Administrador(a) cadastrado(a) com sucesso')
